@@ -7,8 +7,8 @@
 
 _start:
 @ Print "Hello world!"
-      mov R0, #Stdout
-      ldr R1, =Message1
+      mov r0, #Stdout
+      ldr r1, =Message1
       swi SWI_PrStr
 
       swi SWI_Exit  @ stop executing: end of program

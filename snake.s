@@ -1,8 +1,14 @@
 @ File: snake.s
+        .equ SWI_CheckBlcak, 0x202    @check black button
+        .equ  SWI_CheckBlue, 0x203    @check press Blue button
+        .equ  SWI_DRAW_STRING, 0x204    @display a string on LCD
         .equ  SWI_CLEAR_DISPLAY, 0x206    @clear LCD
         .equ  SWI_DRAW_CHAR, 0x207    @display a char on LCD
-
+        .equ SWI_Exit, 0x11
         .equ SWI_GetTicks, 0x6d   @get start time
+
+        .equ LEFT_BLACK_BUTTON, 0x01    @bit patterns for black buttons
+        .equ RIGHT_BLACK_BUTTON, 0x02
 
         .equ BLUE_KEY_00, 0x01 @button(0)
         .equ BLUE_KEY_01, 0x02 @button(1)
@@ -12,20 +18,13 @@
         .equ BLUE_KEY_05, 0x20 @button(5)
         .equ BLUE_KEY_06, 0x40 @button(6)
         .equ BLUE_KEY_07, 0x80 @button(7)
-        .equ BLUE_KEY_00, 1<<8 @button(8) - different way to set
-        .equ BLUE_KEY_01, 1<<9 @button(9)
-        .equ BLUE_KEY_02, 1<<10 @button(10)
-        .equ BLUE_KEY_03, 1<<11 @button(11)
-        .equ BLUE_KEY_04, 1<<12 @button(12)
-        .equ BLUE_KEY_05, 1<<13 @button(13)
-        .equ BLUE_KEY_06, 1<<14 @button(14)
-        .equ BLUE_KEY_07, 1<<15 @button(15)
+
         .text
         .global _start
 
 _start:
         @ initial
-        swi   SWI_CLEAR_DISPLAY
+INITIAL:swi   SWI_CLEAR_DISPLAY
         mov   r7, #0       @Length - 1
         mov   r6, #4       @direction   Up--1; Down--2; Left--3; Right--4
         mov   r5, #0       @count cycles
@@ -42,25 +41,38 @@ _start:
         strb  r3, [r2]        @ start Y
 
 
-L1:
-        @Read
-        ldr   r3, =AddressX     @x
-        ldr   r1, [r3]
-        ldrb   r0, [r1, r7]     @get X of head
-        ldr   r3, =AddressY     @y
-        ldr   r1, [r3]
-        ldrb   r1, [r1, r7]     @get Y of head
+L1:     swi   SWI_CheckBlue
+        cmp   r0, #BLUE_KEY_01    @Up
+        beq   ONE
+        cmp   r0, #BLUE_KEY_05    @Down
+        beq   FIVE
+        cmp   r0, #BLUE_KEY_04    @Left
+        beq   FOUR
+        cmp   r0, #BLUE_KEY_06    @Right
+        beq   SIX
+        bal   M1
 
-        cmp   r5, #5
+ONE:    mov   r6, #1
+        bal   M1
+FIVE:   mov   r6, #2
+        bal   M1
+FOUR:   mov   r6, #3
+        bal   M1
+SIX:    mov   r6, #4
+        @bal   M1
+
+
+M1:     cmp   r5, #5
         bne   CRUISE
 
         @ increase length
-        add   r7, r7, #1
-        bl    CGXOY
-        mov   r2, #'*
-        swi   SWI_DRAW_CHAR
-        mov     R5, #0
 
+        bl    CGXOY
+        cmp   r6, #0
+        beq   OVER
+
+        mov     R5, #0
+        add   r7, r7, #1
         @Write
         ldr   r3, =AddressX     @x
         ldr   r2, [r3]
@@ -70,17 +82,27 @@ L1:
         strb  r1, [r3,r7]        @ start Y
         ldr   r3, =500
         bl    Wait
+
         bal   L1
 
-CRUISE: mov   r2, #0X20
+CRUISE:
+
+        @Read
+        ldr   r3, =AddressX     @x
+        ldr   r1, [r3]
+        ldrb   r0, [r1]     @get X of toil
+        ldr   r3, =AddressY     @y
+        ldr   r1, [r3]
+        ldrb   r1, [r1]     @get Y of toil
+
+        mov   r2, #0X20
         swi   SWI_DRAW_CHAR
 
-        bl
+        bl    Flush
 
         bl    CGXOY
-
-        mov   r2, #'*
-        swi   SWI_DRAW_CHAR
+        cmp   r6, #0
+        beq   OVER
 
         @Write
         ldr   r3, =AddressX     @x
@@ -96,7 +118,32 @@ CRUISE: mov   r2, #0X20
         bl    Wait
 
 
-        bAl   L1
+        bal   L1
+
+
+OVER:   swi   SWI_CLEAR_DISPLAY
+        mov   r0, #17
+        mov   r1, #3
+        ldr   r2, =Die
+        swi   SWI_DRAW_STRING
+
+        mov   r0, #17
+        mov   r1, #5
+        ldr   r2, =Score
+        swi   SWI_DRAW_STRING
+
+        mov   r0, #1
+        mov   r1, #7
+        ldr   r2, =Restart
+        swi   SWI_DRAW_STRING
+
+CKBLK:  swi   SWI_CheckBlcak
+        cmp   r0, #LEFT_BLACK_BUTTON
+        beq   INITIAL
+        bal   CKBLK
+
+        swi   SWI_Exit
+
 
 @ ====== Flush Memory (len:r7)
 @ Change coordinates of snake's body
@@ -104,22 +151,24 @@ Flush:
         stmfd sp!,{r0-r7,lr}
 
         mov   r5, #0
-        cmp   r5, r7
+LP1:    cmp   r5, r7
         bge   XFlush            @r5 >= r7
 
         @Read
         ldr   r3, =AddressX     @x
         ldr   r2, [r3]
-        ldrb   r0, [r2, r5, #1]     @get X+1
+        add   r6, r5, #1
+        ldrb   r0, [r2, r6]     @get X+1
         ldr   r3, =AddressY     @y
         ldr   r3, [r3]
-        ldrb   r1, [r3, r5, #1]     @get Y+1
+        ldrb   r1, [r3, r6]    @get Y+1
 
         @Write
         strb  r0, [r2,r5]        @ start X
         strb  r1, [r3,r5]        @ start Y
 
         add   r5, r5, #1
+        bal   LP1
 XFlush:
         ldmfd sp!,{r0-r7,pc}
 @ ===========================================================
@@ -128,6 +177,14 @@ XFlush:
 @ Change coordinates according to direction
 CGXOY:
         stmfd sp!,{lr}
+        @Read
+        ldr   r3, =AddressX     @x
+        ldr   r1, [r3]
+        ldrb   r0, [r1, r7]     @get X of head
+        ldr   r3, =AddressY     @y
+        ldr   r1, [r3]
+        ldrb   r1, [r1, r7]     @get Y of head
+
         cmp   r6, #1
         beq   UP
         cmp   r6, #2
@@ -135,15 +192,29 @@ CGXOY:
         cmp   r6, #3
         beq   LEFT
         @ default direction: right
+        cmp   r0, #39
+        beq   GG
         add   r0, r0, #1
         bal   XCGXOY
 
-UP:     sub   r1, r1, #1
+UP:     cmp   r1, #0
+        beq   GG
+        sub   r1, r1, #1
         bal   XCGXOY    @draw new point
-DOWN:   add   r1, r1, #1
+DOWN:   cmp   r1, #14
+        beq   GG
+        add   r1, r1, #1
         bal   XCGXOY
-LEFT:   sub   r0, r0, #1
+LEFT:   cmp   r0, #0
+        beq   GG
+        sub   r0, r0, #1
+
 XCGXOY:
+        mov   r2, #'*
+        swi   SWI_DRAW_CHAR
+        ldmfd sp!,{pc}
+
+GG:     mov   r6, #0
         ldmfd sp!,{pc}
 
 @ ===========================================================
@@ -173,6 +244,9 @@ XWait:
 @ ===========================================================
 
         .data
+Die:    .asciz  "You died!"
+Score:  .asciz  "Score:"
+Restart:.asciz  "Press left black button to restart."
 Length: .word 0
 AddressX:   .word 0x2000
 AddressY:   .word 0x6000

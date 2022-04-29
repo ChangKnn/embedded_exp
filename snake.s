@@ -26,7 +26,7 @@
 _start:
         @ initial
         swi   SWI_CLEAR_DISPLAY
-        mov   r7, #0       @Length
+        mov   r7, #0       @Length - 1
         mov   r6, #4       @direction   Up--1; Down--2; Left--3; Right--4
         mov   r5, #0       @count cycles
 
@@ -36,7 +36,7 @@ _start:
         ldr   r0, =AddressY     @y
         ldr   r2, [r0]
 
-        mov   r3, #20
+        mov   r3, #0
         strb  r3, [r1]        @ start X
         mov   r3, #8
         strb  r3, [r2]        @ start Y
@@ -53,19 +53,33 @@ L1:
 
         cmp   r5, #5
         bne   CRUISE
+
         @ increase length
         add   r7, r7, #1
         bl    CGXOY
         mov   r2, #'*
         swi   SWI_DRAW_CHAR
+        mov     R5, #0
 
+        @Write
+        ldr   r3, =AddressX     @x
+        ldr   r2, [r3]
+        ldr   r3, =AddressY     @y
+        ldr   r3, [r3]
+        strb  r0, [r2,r7]        @ start X
+        strb  r1, [r3,r7]        @ start Y
+        ldr   r3, =500
+        bl    Wait
+        bal   L1
 
 CRUISE: mov   r2, #0X20
         swi   SWI_DRAW_CHAR
 
+        bl
+
         bl    CGXOY
 
-DR:     mov   r2, #'*
+        mov   r2, #'*
         swi   SWI_DRAW_CHAR
 
         @Write
@@ -78,20 +92,37 @@ DR:     mov   r2, #'*
 
         add   r5, r5, #1        @count++
 
-        @ldr   r3, =500
-        @bl    Wait
-
-        cmp   r5, #5          @whether increase
-        bne   RU
-        add   r7, r7, #1      @increase length
-        mov   r5, #0
-
-RU:     add   r5, r5, #1
+        ldr   r3, =500
+        bl    Wait
 
 
         bAl   L1
 
+@ ====== Flush Memory (len:r7)
+@ Change coordinates of snake's body
+Flush:
+        stmfd sp!,{r0-r7,lr}
 
+        mov   r5, #0
+        cmp   r5, r7
+        bge   XFlush            @r5 >= r7
+
+        @Read
+        ldr   r3, =AddressX     @x
+        ldr   r2, [r3]
+        ldrb   r0, [r2, r5, #1]     @get X+1
+        ldr   r3, =AddressY     @y
+        ldr   r3, [r3]
+        ldrb   r1, [r3, r5, #1]     @get Y+1
+
+        @Write
+        strb  r0, [r2,r5]        @ start X
+        strb  r1, [r3,r5]        @ start Y
+
+        add   r5, r5, #1
+XFlush:
+        ldmfd sp!,{r0-r7,pc}
+@ ===========================================================
 
 @ ====== Change XoY (x:r0, y:r1, dic:r6)
 @ Change coordinates according to direction
@@ -115,7 +146,7 @@ LEFT:   sub   r0, r0, #1
 XCGXOY:
         ldmfd sp!,{pc}
 
-
+@ ===========================================================
 
 @ ====== Wait (Dealy:r3) wait for r3 milliseconds
 @ Delays for the amount of time stored in r3 for a 15-bit timer

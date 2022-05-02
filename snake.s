@@ -29,6 +29,11 @@ INITIAL:
         mov   r5, #0       @count cycles
         mov   r4, #0       @fruit count
 
+        ldr   r3, =SC     @Score+5
+        ldr   r1, [r3]
+        mov   r1, #0
+        strb  r1, [r3]
+
         ldr   r0, =AddressX     @x
         ldr   r1, [r0]
         mov   r3, #0
@@ -103,7 +108,7 @@ M1:     cmp   r5, #5
         ldr   r3, =SC     @Score+5
         ldr   r1, [r3]
         add   r1, r1, #5
-        strb  r1, [r3]        @ start X
+        strb  r1, [r3]
 
         ldr   r3, =300
         bl    Wait

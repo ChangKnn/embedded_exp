@@ -1,4 +1,5 @@
 @ File: helloworld.s
+@ Author: Kun Chang
         .equ SWI_PrStr, 0x69
         .equ SWI_Exit, 0x11
         .equ Stdout, 1

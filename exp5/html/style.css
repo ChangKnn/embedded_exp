@@ -1,0 +1,96 @@
+body {
+  margin: 0;
+}
+
+#chart-container {
+  position: relative;
+  bottom: 0;
+  height: 94vh;
+  overflow: hidden;
+  border-top-style: solid;
+  margin: 0;
+}
+
+#nameBar {
+  text-align: center;
+  position: relative;
+  top: 0;
+  height: 5vh;
+  width: 100%;
+}
+
+h1 {
+  color: #999999;
+  font-family: arial, sans-serif;
+  font-size: 2vw;
+  ;
+  font-weight: bold;
+  padding-left: 10px;
+  display: inline;
+  margin: 0;
+}
+
+p {
+  display: inline;
+  font-family: arial, sans-serif;
+  font-size: 20px;
+}
+
+#global {
+  height: 100vh;
+  width: 100vw;
+}
+
+#left {
+  position: absolute;
+  left: 0;
+  width: 80vw;
+  height: 100%;
+  border-right-style: solid;
+}
+
+#right {
+  position: absolute;
+  right: 0;
+  width: 20vw;
+  height: 100%;
+}
+
+#divTable {
+  position: relative;
+  top: 0;
+  width: 100%;
+  max-height: 93%;
+  overflow-y: auto;
+}
+
+#buttonBar {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  height: 5%;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  border-top-style: solid;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+
+button {
+  height: 95%;
+  width: 47%;
+}
+
+#tableXYZ {
+  border: 1px solid;
+  margin: auto;
+  width: 100%;
+}
+
+td,
+th {
+  text-align: center;
+  border: 1px solid;
+}

@@ -1,4 +1,5 @@
 @ File: snake.s
+@ Author: Kun Chang
         .equ SWI_CheckBlcak, 0x202    @check black button
         .equ  SWI_CheckBlue, 0x203    @check press Blue button
         .equ  SWI_DRAW_STRING, 0x204    @display a string on LCD

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <link rel="shortcut icon" href="icon.ico">
+  <title>花粉布朗运动</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+  <div id="global">
+    <div id="left">
+      <div id="nameBar">
+        <h1>花粉布朗运动 张鲲 2019212270</h1>
+      </div>
+      <div id="chart-container"></div>
+      <script src="echarts.min.js"></script>
+      <script src="echarts-gl.min.js"></script>
+      <script src="index.js"></script>
+    </div>
+    <div id="right">
+      <div id="divTable">
+        <table id="tableXYZ">
+          <tr>
+            <th>X</th>
+            <th>Y</th>
+            <th>Z</th>
+          </tr>
+        </table>
+      </div>
+      <div id="buttonBar">
+        <button onclick="start()" id="start">Start</button>
+        <button onclick="stop()" id="stop" disabled>Stop</button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

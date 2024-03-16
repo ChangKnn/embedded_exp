@@ -1,4 +1,5 @@
 @ File: LES.s
+@ Author: Kun Chang
         .equ SEG_A,0x80   @patterns for 8 segment display
         .equ SEG_B,0x40
         .equ SEG_C,0x20
